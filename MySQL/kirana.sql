@@ -55,8 +55,8 @@ CREATE TABLE Product
     seller_id INT NOT NULL ,
     category_id INT NOT NULL,
     PRIMARY KEY(product_id),
-	FOREIGN KEY(seller_id) REFERENCES Seller(seller_id),
-    FOREIGN KEY(category_id) REFERENCES category(category_id)
+	FOREIGN KEY(seller_id) REFERENCES Seller(seller_id) ON DELETE CASCADE,
+    FOREIGN KEY(category_id) REFERENCES category(category_id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS Payment;
@@ -86,11 +86,11 @@ create table Orders
     delivery_fee numeric (15,2) check(delivery_fee >= 0),
     customer_id INT NOT NULL ,
     payment_id INT NOT NULL,
-    deliverypartner_id INT NOT NULL,
+    deliverypartner_id INT,
     PRIMARY KEY(order_id),
-    FOREIGN KEY(payment_id) REFERENCES Payment(payment_id),
-    FOREIGN KEY(customer_id) REFERENCES Customer(customer_id),
-    FOREIGN KEY(deliverypartner_id) REFERENCES DeliveryPartner(deliverypartner_id)
+    FOREIGN KEY(payment_id) REFERENCES Payment(payment_id) ON DELETE CASCADE,
+    FOREIGN KEY(customer_id) REFERENCES Customer(customer_id) ON DELETE CASCADE,
+    FOREIGN KEY(deliverypartner_id) REFERENCES DeliveryPartner(deliverypartner_id) ON DELETE SET NULL
 );
 
 
@@ -102,9 +102,9 @@ create table ShoppingCart
     customer_id INT NOT NULL,
     order_id INT,
     product_id INT NOT NULL,
-	FOREIGN KEY(customer_id) REFERENCES Customer(customer_id),
-    FOREIGN KEY(order_id) REFERENCES Orders(order_id),
-    FOREIGN KEY(product_id) REFERENCES Product(product_id)
+	FOREIGN KEY(customer_id) REFERENCES Customer(customer_id) ON DELETE CASCADE,
+    FOREIGN KEY(order_id) REFERENCES Orders(order_id) ON DELETE SET NULL,
+    FOREIGN KEY(product_id) REFERENCES Product(product_id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS Shipment;
@@ -113,9 +113,9 @@ create table Shipment
 	delivery_date TIMESTAMP default NULL,
     delivery_status boolean NOT NULL,
     order_id INT NOT NULL,
-    deliverypartner_id INT NOT NULL,
-    FOREIGN KEY(order_id) REFERENCES Orders(order_id),
-	FOREIGN KEY(deliverypartner_id) REFERENCES DeliveryPartner(deliverypartner_id)
+    deliverypartner_id INT,
+    FOREIGN KEY(order_id) REFERENCES Orders(order_id) ON DELETE CASCADE,
+	FOREIGN KEY(deliverypartner_id) REFERENCES DeliveryPartner(deliverypartner_id) ON DELETE SET NULL
 );
 
 DROP TABLE IF EXISTS Admin;
@@ -131,9 +131,5 @@ create table Inventory
 (
 	product_id INT NOT NULL,
 	quantity INT check (quantity >=0) NOT NULL,
-	FOREIGN KEY(product_id) REFERENCES Product(product_id)
+	FOREIGN KEY(product_id) REFERENCES Product(product_id) ON DELETE CASCADE
 );
-
-
-
-

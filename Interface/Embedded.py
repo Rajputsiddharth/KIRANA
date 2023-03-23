@@ -169,6 +169,8 @@ def view_products():
 while (True):
   print("Welcome to Kirana, One stop destination for all your needs ;)\n1) Login\n2) Sign Up\n3) Enter as Admin\n4) Exit")
   choice = int(input("Enter your choice: "))
+
+  # Login 
   if choice == 1:
     print("1) Login as Customer\n2) Login as Seller")
     choice = int(input("Enter your choice: "))
@@ -182,6 +184,8 @@ while (True):
         print("Login Successful!")
       else:
         print("OOOPS, Login Failed!")
+
+  # Sign Up
   elif choice == 2:
     print("1) Sign Up as Customer\n2) Sign Up as Seller")
     choice = int(input("Enter your choice: "))
@@ -189,6 +193,8 @@ while (True):
       add_customer()
     elif choice == 2:
       add_seller()
+  
+  # Admin Login
   elif choice == 3:
     if login_admin():
       print("Login Successful!")
@@ -207,7 +213,8 @@ while (True):
           break
     else:
       print("OOOPS, Login Failed!")
+  
+  # Exit the application
   elif choice == 4:
     print("Thank you for using Kirana! Come back soon, we know you can't resist us ;)")
     break
-

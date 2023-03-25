@@ -13,7 +13,6 @@ mydb = mysql.connector.connect(
 mycursor = mydb.cursor()
 
 
-
 ###
 # Function to add customer to the database
 def add_customer():
@@ -172,27 +171,54 @@ while (True):
 
   # Login 
   if choice == 1:
-    print("1) Login as Customer\n2) Login as Seller")
-    choice = int(input("Enter your choice: "))
-    if choice == 1:
-      if login_customer():
-        print("Login Successful!")
-      else:
-        print("OOOPS, Login Failed!")
-    elif choice == 2: 
-      if login_seller():
-        print("Login Successful!")
-      else:
-        print("OOOPS, Login Failed!")
+    while True:
+      print("1) Login as Customer\n2) Login as Seller\n3) Go Back")
+      i1 = int(input("Enter your choice: "))
+      if i1 == 1:
+        if login_customer():
+          print("Login Successful!")
+          while True:
+            # print("1) View Categories\n2) View Products\n3) View Cart\n4) Add to Cart\n5) Remove from Cart\n6) Checkout\n7) Logout")
+            print("1) View Categories\n2) View Products\n")
+            i2 = int(input("Enter your choice: "))
+            if i2 == 1:
+              view_categories()
+            elif i2 == 2:
+              view_products()
+            # elif choice == 3:
+            #   #view_cart()
+            # elif choice == 4:
+            #   #add_to_cart()
+            # elif choice == 5:
+            #   #remove_from_cart()
+            # elif choice == 6:
+            #   #checkout()
+            # elif choice == 7:
+            #   break
+        else:
+          print("OOOPS, Login Failed!")
+      elif i1 == 2: 
+        if login_seller():
+          print("Login Successful!")
+        else:
+          print("OOOPS, Login Failed!")
+      elif i1 == 3:
+        break
+
 
   # Sign Up
   elif choice == 2:
-    print("1) Sign Up as Customer\n2) Sign Up as Seller")
-    choice = int(input("Enter your choice: "))
-    if choice == 1:
-      add_customer()
-    elif choice == 2:
-      add_seller()
+    while True:
+      print("1) Sign Up as Customer\n2) Sign Up as Seller\n3) Go Back")
+      i1 = int(input("Enter your choice: "))
+      if i1 == 1:
+        add_customer()
+        print("Thank you for signing up!")
+      elif i1 == 2:
+        add_seller()
+        print("Thank you for signing up!")
+      elif i1 == 3:
+        break
   
   # Admin Login
   elif choice == 3:
@@ -200,16 +226,16 @@ while (True):
       print("Login Successful!")
       while True:
         print("1) View Customers\n2) View Sellers\n3) View Categories\n4) View Products\n5) Logout")
-        choice = int(input("Enter your choice: "))
-        if choice == 1:
+        i1 = int(input("Enter your choice: "))
+        if i1 == 1:
           view_customers()
-        elif choice == 2:
+        elif i1 == 2:
           view_sellers()
-        elif choice == 3:
+        elif i1 == 3:
           view_categories()
-        elif choice == 4:
+        elif i1 == 4:
           view_products()
-        elif choice == 5:
+        elif i1 == 5:
           break
     else:
       print("OOOPS, Login Failed!")
@@ -218,3 +244,4 @@ while (True):
   elif choice == 4:
     print("Thank you for using Kirana! Come back soon, we know you can't resist us ;)")
     break
+

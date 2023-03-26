@@ -1,4 +1,5 @@
 import mysql.connector
+import maskpass
 from tabulate import tabulate
 
 # Establish connection with MySQL database
@@ -8,6 +9,7 @@ mydb = mysql.connector.connect(
   password="siddharth@sem3",
   database="kirana"
 )
+
 
 # Create cursor object to execute SQL queries
 mycursor = mydb.cursor()
@@ -23,7 +25,7 @@ def add_customer():
   date_of_birth = input("Enter date of birth (YYYY-MM-DD): ")
   phone_num = input("Enter phone number: ")
   email_address = input("Enter email address: ")
-  password = input("Enter password: ")
+  password = maskpass.askpass(prompt="Enter password: ", mask="*")
   apt_number =input("Enter apartment number: ")
   street = input("Enter street: ")
   city = input("Enter city: ")
@@ -46,6 +48,8 @@ def add_seller():
   # prompt user to input values for attributes
   name = input("Enter seller name: ")
   phone_num = input("Enter phone number: ")
+  email_address = input("Enter email address: ")
+  password = maskpass.askpass(prompt="Enter password: ", mask="*")
   apt_number = int(input("Enter apartment number: "))
   street = input("Enter street address: ")
   city = input("Enter city: ")
@@ -53,8 +57,8 @@ def add_seller():
   pincode = int(input("Enter pincode: "))
 
   # Define SQL query and data values
-  sql = "INSERT INTO Seller (name, phone_num, apt_number, street, city, state, pincode) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-  val = (name, phone_num, apt_number, street, city, state, pincode)
+  sql = "INSERT INTO Seller (name, phone_num, email_address, password, apt_number, street, city, state, pincode) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+  val = (name, phone_num, email_address, password, apt_number, street, city, state, pincode)
 
   # Execute query and commit changes
   mycursor.execute(sql, val)
@@ -62,11 +66,12 @@ def add_seller():
 
   print(mycursor.rowcount, "record inserted.")
 
+
 ###
 # Function to login as customer
 def login_customer():
   email_address = input("Enter Email Address: ")
-  password = input("Enter Password: ")
+  password = maskpass.askpass(prompt="Password:", mask="*")
   # Embedded SQL query to verify customer login details
   sql = "SELECT * FROM Customer WHERE email_address = %s AND password = %s"
   values = (email_address, password)
@@ -85,7 +90,7 @@ def login_customer():
 # Function to login as a admin
 def login_admin():
   username = input("Enter Username: ")
-  password = input("Enter Password: ")
+  password = maskpass.askpass(prompt="Password:", mask="*")
   # Embedded SQL query to verify admin login details
   sql = "SELECT * FROM Admin WHERE username = %s AND password = %s"
   values = (username, password)
@@ -103,10 +108,10 @@ def login_admin():
 ### 
 # Function to login as seller
 def login_seller():
-  phone_num = input("Enter Phone Number: ")
-  password = input("Enter Password: ")
+  phone_num = input("Enter Email Address: ")
+  password = maskpass.askpass(prompt="Password:", mask="*")
   # Embedded SQL query to verify seller login details
-  sql = "SELECT * FROM Seller WHERE phone_num = %s AND password = %s"
+  sql = "SELECT * FROM Seller WHERE email_address = %s AND password = %s"
   values = (phone_num, password)
   # Executing the SQL query using cursor.execute() method
   mycursor.execute(sql, values)
@@ -139,52 +144,174 @@ def view_sellers():
 
     results = mycursor.fetchall()
 
-    for row in results:
-        print(row)
+    # Printing the seller details using tabulate library
+    headers = ["Seller ID", "Name", "Phone Number", "Apartment Number", "Street", "City", "State", "Pincode"]
+    table = tabulate(results, headers=headers, tablefmt="grid")
+    print(table)
 
 ###
-# Function to display all categories in the database
 def view_categories():
     mycursor.execute("SELECT * FROM category")
-
     results = mycursor.fetchall()
-
-    for row in results:
-        print(row)
+    
+    headers = ["Category ID", "Name"]
+    table = tabulate(results, headers=headers, tablefmt="grid")
+    print(table)
 
 ###
 # Function to display all products in the database
 def view_products():
     mycursor.execute("SELECT * FROM product")
-
     results = mycursor.fetchall()
+    headers = ["Product ID", "Product Name", "Price", "Quantity", "Rating", "Description", "Seller ID", "Category ID"]
+    table = tabulate(results, headers=headers, tablefmt="grid")
+    print(table)
 
-    for row in results:
-        print(row)
+
+###
+# function for OLAP query 1
+def olap_query_1():
+    # execute query
+    mycursor.execute("""
+        SELECT YEAR(order_date) AS year,
+               MONTH(order_date) AS month,
+               category.name AS category_name,
+               SUM(purchased.quantity) AS quantity
+        FROM Orders
+        JOIN Purchased ON Orders.order_id = Purchased.order_id
+        JOIN Product ON Purchased.product_id = Product.product_id
+        JOIN category ON Product.category_id = category.category_id
+        GROUP BY year, month, category_name WITH ROLLUP;
+    """)
+    # fetch and print results
+    results = mycursor.fetchall()
+    headers = ["Year", "Month", "Category Name", "Quantity"]
+    table = tabulate(results, headers=headers, tablefmt="grid")
+    print(table)
+
+###
+# function for OLAP query 2
+def olap_query_2():
+    # execute query
+    mycursor.execute("""
+        SELECT Seller.name, Category.name, SUM(Product.price * Purchased.quantity) as revenue
+        FROM Seller
+        INNER JOIN Product ON Seller.seller_id = Product.seller_id
+        INNER JOIN Category ON Product.category_id = Category.category_id
+        INNER JOIN Purchased ON Product.product_id = Purchased.product_id
+        GROUP BY Seller.name, Category.name;
+    """)
+    # fetch and print results
+    results = mycursor.fetchall()
+    headers = ["Seller Name", "Category Name", "Revenue"]
+    table = tabulate(results, headers=headers, tablefmt="grid")
+    print(table)
+
+###
+# function for OLAP query 3
+# function for OLAP query 3
+def olap_query_3():
+    # execute query
+    mycursor.execute("""
+        SELECT 
+            CASE 
+                WHEN YEAR(date_of_birth) >= 2003 THEN 'Under 18'
+                WHEN YEAR(date_of_birth) BETWEEN 1994 AND 2002 THEN '18-27'
+                WHEN YEAR(date_of_birth) BETWEEN 1984 AND 1993 THEN '28-37'
+                WHEN YEAR(date_of_birth) BETWEEN 1974 AND 1983 THEN '38-47'
+                ELSE 'Over 47'
+            END AS age_range, city, COUNT(*) AS num_customers
+        FROM kirana.Customer
+        GROUP BY age_range, city
+        ORDER BY age_range ASC, num_customers DESC;
+    """)
+    # fetch and print results
+    results = mycursor.fetchall()
+    headers = ["Age Range", "City", "Number of Customers"]
+    print(tabulate(results, headers=headers,tablefmt="grid"))
+
+###
+# function for OLAP query 4
+def olap_query_4():
+    # execute query
+    mycursor.execute("""
+        SELECT s.name AS 'Seller', 
+               COUNT(CASE WHEN p.rating = 1 THEN 1 END) AS '1 Star', 
+               COUNT(CASE WHEN p.rating = 2 THEN 1 END) AS '2 Stars', 
+               COUNT(CASE WHEN p.rating = 3 THEN 1 END) AS '3 Stars', 
+               COUNT(CASE WHEN p.rating = 4 THEN 1 END) AS '4 Stars', 
+               COUNT(CASE WHEN p.rating = 5 THEN 1 END) AS '5 Stars'
+        FROM Seller s
+        JOIN Product p ON s.seller_id = p.seller_id
+        JOIN Purchased pu ON p.product_id = pu.product_id
+        GROUP BY s.seller_id;
+    """)
+    # fetch and print results
+    results = mycursor.fetchall()
+    headers = ['Seller', '1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars']
+    rows = [list(row) for row in results]
+    print(tabulate(rows, headers=headers, tablefmt="grid"))
+
+### 
+# function for OLAP query 5
+def olap_query_5():
+    # execute query
+    mycursor.execute("""
+        SELECT Customer.first_name, COUNT(Orders.order_id) AS Total_Orders
+        FROM Customer
+        INNER JOIN Orders ON Customer.customer_id = Orders.customer_id
+        GROUP BY Customer.customer_id
+        ORDER BY Total_Orders DESC
+        LIMIT 10;
+    """)
+    # fetch results
+    results = mycursor.fetchall()
+    
+    # print results
+    print("Top 10 customers who have made the most number of orders:")
+    print(tabulate(results, headers=['Customer Name', 'Total Orders'], tablefmt="grid"))
+
+###
+# function for OLAP query 6
+def olap_query_6():
+    # execute query
+    mycursor.execute("""
+        SELECT COUNT(*) AS num_customers, YEAR(date_of_birth) AS birth_year, MONTH(date_of_birth) AS birth_month
+        FROM Customer
+        GROUP BY birth_year, birth_month
+    """)
+
+    # print results
+    results = mycursor.fetchall()
+    headers = ["Number of Customers", "Birth Year", "Birth Month"]
+    print(tabulate(results, headers=headers, tablefmt="grid"))
 
 
 ###
 # Main Function
 while (True):
-  print("Welcome to Kirana, One stop destination for all your needs ;)\n1) Login\n2) Sign Up\n3) Enter as Admin\n4) Exit")
+  print("******************************\nWelcome to Kirana, One stop destination for all your needs ;)\n1) Login\n2) Sign Up\n3) Enter as Admin\n4) Exit\n******************************")
   choice = int(input("Enter your choice: "))
 
   # Login 
   if choice == 1:
     while True:
-      print("1) Login as Customer\n2) Login as Seller\n3) Go Back")
+      print("******************************\n1) Login as Customer\n2) Login as Seller\n3) Go Back\n******************************")
       i1 = int(input("Enter your choice: "))
       if i1 == 1:
         if login_customer():
           print("Login Successful!")
           while True:
             # print("1) View Categories\n2) View Products\n3) View Cart\n4) Add to Cart\n5) Remove from Cart\n6) Checkout\n7) Logout")
-            print("1) View Categories\n2) View Products\n")
+            print("1) View Categories\n2) View Products\n3) Logout")
             i2 = int(input("Enter your choice: "))
             if i2 == 1:
               view_categories()
             elif i2 == 2:
               view_products()
+            elif i2 == 3:
+              break
+            
             # elif choice == 3:
             #   #view_cart()
             # elif choice == 4:
@@ -209,7 +336,7 @@ while (True):
   # Sign Up
   elif choice == 2:
     while True:
-      print("1) Sign Up as Customer\n2) Sign Up as Seller\n3) Go Back")
+      print("******************************\n1) Sign Up as Customer\n2) Sign Up as Seller\n3) Go Back\n******************************")
       i1 = int(input("Enter your choice: "))
       if i1 == 1:
         add_customer()
@@ -225,7 +352,7 @@ while (True):
     if login_admin():
       print("Login Successful!")
       while True:
-        print("1) View Customers\n2) View Sellers\n3) View Categories\n4) View Products\n5) Logout")
+        print("******************************\n1) View Customers\n2) View Sellers\n3) View Categories\n4) View Products\n5) View Analytics\n6) Logout\n******************************")
         i1 = int(input("Enter your choice: "))
         if i1 == 1:
           view_customers()
@@ -236,6 +363,24 @@ while (True):
         elif i1 == 4:
           view_products()
         elif i1 == 5:
+          while True:
+            print("******************************\n1) OLAP Query 1\n2) OLAP Query 2\n3) OLAP Query 3\n4) OLAP Query 4\n5) OLAP Query 5\n6) OLAP Query 6\n7) Go Back\n******************************")
+            i2 = int(input("Enter your choice: "))
+            if i2 == 1:
+              olap_query_1()
+            elif i2 == 2:
+              olap_query_2()
+            elif i2 == 3:
+              olap_query_3()
+            elif i2 == 4:
+              olap_query_4()
+            elif i2 == 5:
+              olap_query_5()
+            elif i2 == 6:
+              olap_query_6()
+            elif i2 == 7:
+              break
+        elif i1 == 6:
           break
     else:
       print("OOOPS, Login Failed!")

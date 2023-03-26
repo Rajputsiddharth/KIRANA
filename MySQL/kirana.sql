@@ -53,7 +53,7 @@ CREATE TABLE Product
     name varchar(40) NOT NULL,
     price numeric(10, 2) check(Price > 0) NOT NULL,
     quantity INT check (quantity >=0) NOT NULL,
-    rating tinyint check (rating >0) NOT NULL,
+    rating tinyint check (rating >=0) NOT NULL,
     description text,
     seller_id INT NOT NULL ,
     category_id INT NOT NULL,
@@ -115,6 +115,7 @@ create table ShoppingCart
     customer_id INT NOT NULL,
     order_id INT,
     product_id INT NOT NULL,
+    quantity INT NOT NULL,
 	FOREIGN KEY(customer_id) REFERENCES Customer(customer_id) ON DELETE CASCADE,
     FOREIGN KEY(order_id) REFERENCES Orders(order_id) ON DELETE SET NULL,
     FOREIGN KEY(product_id) REFERENCES Product(product_id) ON DELETE CASCADE

@@ -14,7 +14,6 @@ mydb = mysql.connector.connect(
 # Create cursor object to execute SQL queries
 mycursor = mydb.cursor()
 
-
 ###
 # Function to add customer to the database
 def add_customer():
@@ -67,6 +66,26 @@ def add_seller():
   print(mycursor.rowcount, "record inserted.")
 
 
+def add_product():
+  name = input("Enter the name of the product: ")
+  price = float(input("Enter the price of the product: "))
+  quantity = int(input("Enter the quantity of the product: "))
+  rating = int(input("Enter the rating of the product: "))
+  description = input("Enter the description of the product: ")
+  seller_id = int(input("Enter the seller ID for the product: "))
+  category_id = int(input("Enter the category ID for the product: "))
+
+  # Define SQL query and data values
+  sql = "INSERT INTO Product (name, price, quantity, rating, description, seller_id, category_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+  val = (name, price, quantity, rating, description, seller_id, category_id)
+
+  # Execute query and commit changes
+  mycursor.execute(sql, val)
+  mydb.commit()
+
+  print(mycursor.rowcount, "record inserted.")
+
+
 ###
 # Function to login as customer
 def login_customer():
@@ -81,10 +100,10 @@ def login_customer():
   result = mycursor.fetchall()
   # Checking if the result is empty
   # Checking if the login details are correct
-  if len(result) == 0:
-    return False
+  if result is None:
+      return False
   else:
-    return True
+      return result[0][0] 
 
 ###
 # Function to login as a admin
@@ -123,7 +142,45 @@ def login_seller():
     return False
   else:
     return True
-     
+  
+def add_to_cart(customer_id):
+  # Get input from user
+  product_id = int(input("Enter product ID: "))
+  quantity = int(input("Enter quantity: "))
+
+  # Check if the product exists
+  mycursor = mydb.cursor()
+  mycursor.execute("SELECT * FROM Product WHERE product_id = %s", (product_id,))
+  product = mycursor.fetchone()
+  if product:
+    # Confirm with the customer if they want to add the product to their cart
+    confirm = input("Do you want to add " + product[1] + " to your cart? (y/n): ")
+    if confirm.lower() == 'y':
+      # Add the product to the customer's shopping cart
+      mycursor.execute("INSERT INTO ShoppingCart (total_cost, taxes, customer_id, product_id, quantity) VALUES (%s, %s, %s, %s, %s)", (product[2], product[3], customer_id, product_id, quantity))
+      mydb.commit()
+      print("Product added to cart successfully!")
+    else:
+      print("Product not added to cart.")
+  else:
+    print("Product not found.")
+
+def view_cart(customer_id):
+    cursor = mydb.cursor()
+    cursor.execute("SELECT p.product_id, p.name, p.price, s.name AS seller_name, s.phone_num AS seller_phone_num, s.email_address AS seller_email, c.quantity FROM Product p JOIN ShoppingCart c ON p.product_id = c.product_id JOIN Seller s ON p.seller_id = s.seller_id WHERE c.customer_id = %s", (customer_id,))
+    result = cursor.fetchall()
+    if len(result) == 0:
+        print("Your cart is empty.")
+    else:
+        print("Your cart:")
+        for row in result:
+            print(f"Product ID: {row[0]}")
+            print(f"Name: {row[1]}")
+            print(f"Price: {row[2]}")
+            print(f"Quantity: {row[6]}")
+            print("-----")
+
+
 ###
 # Function to display all customers in the database
 def view_customers():
@@ -131,23 +188,41 @@ def view_customers():
 
   results = mycursor.fetchall()
 
-  # Printing the customer details using tabulate library
-  headers = ["Customer ID", "First Name", "Middle Name", "Last Name", "Date of Birth", "Phone Number", "Email Address", "Apartment Number", "Street", "City", "State", "Pincode"]
-  table = tabulate(results, headers=headers, tablefmt="grid")
-  print(table)
+  # Printing the customer details
+  print("CUSTOMERS")
+  print("----------")
+  for row in results:
+    print("Customer ID:", row[0])
+    print("Name:", row[1])
+    print("Phone Number:", row[2])
+    print("Email Address:", row[3])
+    print("Apartment Number:", row[4])
+    print("Street:", row[5])
+    print("City:", row[6])
+    print("State:", row[7])
+    print("Pincode:", row[8])
+    print("----------")
 
+  # for row in results:
+  #   print(row)
 
 ###
 # Function to display all sellers in the database
 def view_sellers():
-    mycursor.execute("SELECT * FROM seller")
+  mycursor.execute("SELECT * FROM seller")
 
-    results = mycursor.fetchall()
+  results = mycursor.fetchall()
 
-    # Printing the seller details using tabulate library
-    headers = ["Seller ID", "Name", "Phone Number", "Apartment Number", "Street", "City", "State", "Pincode"]
-    table = tabulate(results, headers=headers, tablefmt="grid")
-    print(table)
+  for seller in results:
+      print("Seller ID:", seller[0])
+      print("Name:", seller[1])
+      print("Phone Number:", seller[2])
+      print("Apartment Number:", seller[3])
+      print("Street:", seller[4])
+      print("City:", seller[5])
+      print("State:", seller[6])
+      print("Pincode:", seller[7])
+      print("----------")
 
 ###
 def view_categories():
@@ -163,11 +238,17 @@ def view_categories():
 def view_products():
     mycursor.execute("SELECT * FROM product")
     results = mycursor.fetchall()
-    headers = ["Product ID", "Product Name", "Price", "Quantity", "Rating", "Description", "Seller ID", "Category ID"]
-    table = tabulate(results, headers=headers, tablefmt="grid")
-    print(table)
-
-
+    for row in results:
+        print("Product ID:", row[0])
+        print("Name:", row[1])
+        print("Price:", row[2])
+        print("Quantity:", row[3])
+        print("Rating", row[4])
+        print("Description", row[5])
+        print("Seller ID", row[6])
+        print("Category ID", row[7])
+        print("----------")
+        
 ###
 # function for OLAP query 1
 def olap_query_1():
@@ -287,6 +368,26 @@ def olap_query_6():
     print(tabulate(results, headers=headers, tablefmt="grid"))
 
 
+def search_product(product_name):
+    # Execute the SQL query to select the product by name
+    query = "SELECT * FROM Product WHERE name = %s"
+    mycursor.execute(query, (product_name,))
+
+    # Fetch the results of the query
+    product = mycursor.fetchone()
+
+    # Display the details of the product
+    if product is not None:
+        print("################\nProduct ID:", product[0])
+        print("Name:", product[1])
+        print("Price:", product[2])
+        print("Quantity:", product[3])
+        print("Rating:", product[4])
+        print("Description:", product[5])
+        print("################")
+    else:
+        print("Product not found.")
+
 ###
 # Main Function
 while (True):
@@ -299,17 +400,25 @@ while (True):
       print("******************************\n1) Login as Customer\n2) Login as Seller\n3) Go Back\n******************************")
       i1 = int(input("Enter your choice: "))
       if i1 == 1:
-        if login_customer():
-          print("Login Successful!")
+        result=login_customer()
+        if result:
+          print("Login Successful! ")
           while True:
             # print("1) View Categories\n2) View Products\n3) View Cart\n4) Add to Cart\n5) Remove from Cart\n6) Checkout\n7) Logout")
-            print("1) View Categories\n2) View Products\n3) Logout")
+            print("1) View Categories\n2) View Products\n3) Search Product\n4)Add to Cart \n5) View Cart\n6) Logout")
             i2 = int(input("Enter your choice: "))
             if i2 == 1:
               view_categories()
             elif i2 == 2:
               view_products()
             elif i2 == 3:
+              product_name = input("Enter product name: ")
+              search_product(product_name)
+            elif i2 == 4:
+              add_to_cart(result)
+            elif i2 == 5:
+              view_cart(result)
+            elif i2 == 6:
               break
             
             # elif choice == 3:
@@ -352,7 +461,7 @@ while (True):
     if login_admin():
       print("Login Successful!")
       while True:
-        print("******************************\n1) View Customers\n2) View Sellers\n3) View Categories\n4) View Products\n5) View Analytics\n6) Logout\n******************************")
+        print("******************************\n1) View Customers\n2) View Sellers\n3) View Categories\n4) View Products\n5) View Analytics\n6) Add Product\n7) Logout\n******************************")
         i1 = int(input("Enter your choice: "))
         if i1 == 1:
           view_customers()
@@ -381,6 +490,8 @@ while (True):
             elif i2 == 7:
               break
         elif i1 == 6:
+          add_product()
+        elif i1 == 7:
           break
     else:
       print("OOOPS, Login Failed!")

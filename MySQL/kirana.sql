@@ -10,23 +10,26 @@ CREATE TABLE Customer
     middle_name varchar(40),
     last_name varchar(40),
     date_of_birth date NOT NULL,
-    phone_num varchar(20) NOT NULL,
+    phone_num varchar(20) NOT NULL unique,
     email_address varchar(50) NOT NULL unique,
     password varchar(30) NOT NULL,
     apt_number INT check(apt_number >= 0) NOT NULL,
 	street text NOT NULL,
     city varchar(50) NOT NULL,
     state varchar(50) NOT NULL,
-	pincode numeric(6,0) check(pincode >= 0) NOT NULL,
+	pincode numeric(7,0) check(pincode >= 0) NOT NULL,
     PRIMARY KEY (customer_id)
 );
+
 
 DROP TABLE IF EXISTS Seller;
 create table Seller
 (
 	seller_id INT AUTO_INCREMENT NOT NULL,
     name varchar(40) NOT NULL,
-    phone_num varchar(20) NOT NULL,
+    phone_num varchar(20) NOT NULL unique,
+    email_address varchar(50) NOT NULL unique,
+	password varchar (30) NOT NULL, 
 	apt_number INT check(apt_number >= 0) NOT NULL,
 	street text NOT NULL,
     city varchar(50) NOT NULL,
@@ -143,5 +146,4 @@ create table Inventory
 	quantity INT check (quantity >=0) NOT NULL,
 	FOREIGN KEY(product_id) REFERENCES Product(product_id) ON DELETE CASCADE
 );
-
 

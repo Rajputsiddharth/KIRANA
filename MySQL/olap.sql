@@ -1,4 +1,4 @@
-
+USE kirana;
 -- OLAP 1
 -- This query will give us the total quantity of products sold in each category for each month in each year, along with the subtotals for each month, year, and category.
 SELECT YEAR(order_date) AS year,

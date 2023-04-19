@@ -31,6 +31,7 @@ def add_customer():
   state = input("Enter state: ")
   pincode = int(input("Enter pincode: "))
   
+  
   # Define SQL query and data values
   sql = "INSERT INTO Customer (first_name, middle_name, last_name, date_of_birth, phone_num, email_address, password, apt_number, street, city, state, pincode) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
   val = (first_name, middle_name, last_name, date_of_birth, phone_num, email_address, password, apt_number, street, city, state, pincode)

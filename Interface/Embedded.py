@@ -227,12 +227,37 @@ def view_sellers():
 
 ###
 def view_categories():
-    mycursor.execute("SELECT * FROM category")
-    results = mycursor.fetchall()
-    
-    headers = ["Category ID", "Name"]
-    table = tabulate(results, headers=headers, tablefmt="grid")
-    print(table)
+  mycursor.execute("SELECT * FROM category")
+  results = mycursor.fetchall()
+
+  headers = ["Category ID", "Name"]
+  table = tabulate(results, headers=headers, tablefmt="grid")
+  print(table)
+
+  while True:
+    print("1. View products in a category\n2. Go back")
+    choice = input("Enter your choice: ")
+    if choice == "1":
+      category_id = input("Enter category ID to view products: ")
+      mycursor.execute("SELECT * FROM product WHERE category_id = %s", (category_id,))
+      results = mycursor.fetchall()
+
+      for row in results:
+          print("Product ID:", row[0])
+          print("Name:", row[1])
+          print("Price:", row[2])
+          print("Quantity:", row[3])
+          print("Rating", row[4])
+          print("Description", row[5])
+          print("Seller ID", row[6])
+          print("Category ID", row[7])
+          print("--------------------")
+      return 
+    elif choice == "2":
+      break
+    else:
+      print("Invalid choice. Try again.")
+
 
 ###
 # Function to display all products in the database
@@ -406,7 +431,7 @@ while (True):
           print("Login Successful! ")
           while True:
             # print("1) View Categories\n2) View Products\n3) View Cart\n4) Add to Cart\n5) Remove from Cart\n6) Checkout\n7) Logout")
-            print("1) View Categories\n2) View Products\n3) Search Product\n4)Add to Cart \n5) View Cart\n6) Logout")
+            print("1) View Categories\n2) View Products\n3) Search Product\n4) Add to Cart \n5) View Cart\n6) Logout")
             i2 = int(input("Enter your choice: "))
             if i2 == 1:
               view_categories()

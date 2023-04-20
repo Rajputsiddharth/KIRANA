@@ -7,6 +7,7 @@ mydb = mysql.connector.connect(
   host="localhost",
   user="root",
   password="siddharth@sem3",
+#   password="Viviana123*",
   database="kirana"
 )
 
@@ -226,6 +227,40 @@ def view_cart(customer_id):
             print(f"Quantity: {row[6]}")
             print("-----")
 
+def view_past_orders(customer_id):
+    try:
+        mycursor = mydb.cursor()
+        mycursor.execute("SELECT o.order_id, o.order_date, o.total_cost, o.taxes, p.name, s.name AS seller_name, s.phone_num AS seller_phone_num, s.email_address AS seller_email, op.quantity, sh.delivery_status FROM `orders` o JOIN `purchased` op ON o.order_id = op.order_id JOIN `product` p ON op.product_id = p.product_id JOIN `seller` s ON p.seller_id = s.seller_id LEFT JOIN `shipment` sh ON o.order_id = sh.order_id WHERE o.customer_id = %s ORDER BY sh.delivery_status ASC, o.order_date DESC", (customer_id,))
+        result = mycursor.fetchall()
+
+        if not result:
+            print("No past orders found.")
+            return
+
+        order_dict = {}
+        for row in result:
+            order_id, order_date, total_cost, taxes, product_name, seller_name, seller_phone_num, seller_email, quantity, delivery_status = row
+            if order_id not in order_dict:
+                order_dict[order_id] = {'order_date': order_date, 'total_cost': total_cost, 'taxes': taxes, 'delivery_status': delivery_status, 'product': []}
+            order_dict[order_id]['product'].append({'product_name': product_name, 'seller_name': seller_name, 'seller_phone_num': seller_phone_num, 'seller_email': seller_email, 'quantity': quantity})
+
+        for order_id, order_info in order_dict.items():
+            print(f"Order ID: {order_id}")
+            print(f"Order Date: {order_info['order_date']}")
+            print(f"Total Cost: {order_info['total_cost']}")
+            print(f"Taxes: {order_info['taxes']}")
+            print(f"Delivery Status: {'Active' if order_info['delivery_status'] == 0 else 'Past'}")
+            print("Products:")
+            for product in order_info['product']:
+                print(f"\tProduct Name: {product['product_name']}")
+                print(f"\tSeller Name: {product['seller_name']}")
+                print(f"\tSeller Phone Number: {product['seller_phone_num']}")
+                print(f"\tSeller Email: {product['seller_email']}")
+                print(f"\tQuantity: {product['quantity']}")
+                print("----------")
+            print("==========")
+    except mysql.connector.Error as error:
+        print("Failed to retrieve past orders: {}".format(error))
 
 ###
 # Function to display all customers in the database
@@ -475,7 +510,7 @@ while (True):
           print("Login Successful! ")
           while True:
             # print("1) View Categories\n2) View Products\n3) View Cart\n4) Add to Cart\n5) Remove from Cart\n6) Checkout\n7) Logout")
-            print("1) View Categories\n2) View Products\n3) Search Product\n4) Add to Cart \n5) View Cart\n6) Remove from Cart\n8) Logout")
+            print("1) View Categories\n2) View Products\n3) Search Product\n4) Add to Cart \n5) View Cart\n6) Remove from Cart\n7) View Past Orders\n8) Logout")
             i2 = int(input("Enter your choice: "))
             if i2 == 1:
               view_categories()
@@ -491,6 +526,8 @@ while (True):
             elif i2 == 6:
               remove_cart(result)
             elif i2 == 7:
+              view_past_orders(result)
+            elif i2 == 8:
               break
             # elif choice == 3:
             #   #view_cart()
@@ -584,4 +621,3 @@ while (True):
   elif choice == 4:
     print("Thank you for using Kirana! Come back soon, we know you can't resist us ;)")
     break
-

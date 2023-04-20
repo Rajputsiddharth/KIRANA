@@ -437,6 +437,24 @@ while (True):
       elif i1 == 2: 
         if login_seller():
           print("Login Successful!")
+          while True:
+            print("1) View Categories\n2) View Products\n3) View Analytics\n4) Add Product\n5) Logout")
+            i2 = int(input("Enter your choice: "))
+            if i2 == 1:
+              view_categories()
+            elif i2 == 2:
+              view_products()
+            elif i2 == 3:
+              # olap_query_1()
+              # olap_query_2()
+              # olap_query_3()
+              olap_query_4()
+              # olap_query_5()
+              # olap_query_6()
+            elif i2 == 4:
+              add_product()
+            elif i2 == 5:
+              break
         else:
           print("OOOPS, Login Failed!")
       elif i1 == 3:

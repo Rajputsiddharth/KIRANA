@@ -166,6 +166,51 @@ def add_to_cart(customer_id):
   else:
     print("Product not found.")
 
+def remove_cart(customer_id):
+    cursor = mydb.cursor()
+    cursor.execute("SELECT p.product_id, p.name, p.price, s.name AS seller_name, s.phone_num AS seller_phone_num, s.email_address AS seller_email, c.quantity FROM Product p JOIN ShoppingCart c ON p.product_id = c.product_id JOIN Seller s ON p.seller_id = s.seller_id WHERE c.customer_id = %s", (customer_id,))
+    result = cursor.fetchall()
+    if len(result) == 0:
+        print("Your cart is empty.")
+    else:
+        print("Your cart:")
+        for row in result:
+            print(f"Product ID: {row[0]}")
+            print(f"Name: {row[1]}")
+            print(f"Price: {row[2]}")
+            print(f"Quantity: {row[6]}")
+            print("-----")
+        
+        product_id = input("Enter the ID of the product to remove, or type 'all' to remove all items from your cart: ")
+        if product_id == 'all':
+            cursor.execute("DELETE FROM ShoppingCart WHERE customer_id = %s", (customer_id,))
+            mydb.commit()
+            print("All items removed from your cart.")
+        else:
+            quantity = input("Enter the quantity to remove, or type 'all' to remove all items of this product from your cart: ")
+            if quantity == 'all':
+                cursor.execute("DELETE FROM ShoppingCart WHERE customer_id = %s AND product_id = %s", (customer_id, product_id))
+                mydb.commit()
+                print("All items of this product removed from your cart.")
+            else:
+                cursor.execute("SELECT * FROM ShoppingCart WHERE customer_id = %s AND product_id = %s", (customer_id, product_id))
+                result = cursor.fetchone()
+                if result is None:
+                    print("This product is not in your cart.")
+                else:
+                    current_quantity = result[5]
+                    print(f"Current quantity: {current_quantity}")
+                    if int(quantity) >= current_quantity:
+                        cursor.execute("DELETE FROM ShoppingCart WHERE customer_id = %s AND product_id = %s", (customer_id, product_id))
+                        mydb.commit()
+                        print("All items of this product removed from your cart.")
+                    else:
+                        new_quantity = current_quantity - int(quantity)
+                        cursor.execute("UPDATE ShoppingCart SET quantity = %s WHERE customer_id = %s AND product_id = %s", (new_quantity, customer_id, product_id))
+                        mydb.commit()
+                        print("Item quantity updated in your cart.")
+
+
 def view_cart(customer_id):
     cursor = mydb.cursor()
     cursor.execute("SELECT p.product_id, p.name, p.price, s.name AS seller_name, s.phone_num AS seller_phone_num, s.email_address AS seller_email, c.quantity FROM Product p JOIN ShoppingCart c ON p.product_id = c.product_id JOIN Seller s ON p.seller_id = s.seller_id WHERE c.customer_id = %s", (customer_id,))
@@ -206,7 +251,6 @@ def view_customers():
 
   # for row in results:
   #   print(row)
-
 ###
 # Function to display all sellers in the database
 def view_sellers():
@@ -431,7 +475,7 @@ while (True):
           print("Login Successful! ")
           while True:
             # print("1) View Categories\n2) View Products\n3) View Cart\n4) Add to Cart\n5) Remove from Cart\n6) Checkout\n7) Logout")
-            print("1) View Categories\n2) View Products\n3) Search Product\n4) Add to Cart \n5) View Cart\n6) Logout")
+            print("1) View Categories\n2) View Products\n3) Search Product\n4) Add to Cart \n5) View Cart\n6) Remove from Cart\n8) Logout")
             i2 = int(input("Enter your choice: "))
             if i2 == 1:
               view_categories()
@@ -445,8 +489,9 @@ while (True):
             elif i2 == 5:
               view_cart(result)
             elif i2 == 6:
+              remove_cart(result)
+            elif i2 == 7:
               break
-            
             # elif choice == 3:
             #   #view_cart()
             # elif choice == 4:
@@ -470,12 +515,7 @@ while (True):
             elif i2 == 2:
               view_products()
             elif i2 == 3:
-              # olap_query_1()
-              # olap_query_2()
-              # olap_query_3()
               olap_query_4()
-              # olap_query_5()
-              # olap_query_6()
             elif i2 == 4:
               add_product()
             elif i2 == 5:

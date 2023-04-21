@@ -161,10 +161,20 @@ def add_to_cart(customer_id):
     # Confirm with the customer if they want to add the product to their cart
     confirm = input("Do you want to add " + product[1] + " to your cart? (y/n): ")
     if confirm.lower() == 'y':
-      # Add the product to the customer's shopping cart
-      mycursor.execute("INSERT INTO ShoppingCart (total_cost, taxes, customer_id, product_id, quantity) VALUES (%s, %s, %s, %s, %s)", (product[2], product[3], customer_id, product_id, quantity))
-      mydb.commit()
-      print("Product added to cart successfully!")
+      # Check if the product already exists in the cart
+      mycursor.execute("SELECT * FROM ShoppingCart WHERE customer_id = %s AND product_id = %s", (customer_id, product_id))
+      cart_item = mycursor.fetchone()
+      if cart_item:
+          # Update the quantity of the existing product in the cart
+          updated_quantity = cart_item[5] + quantity
+          mycursor.execute("UPDATE ShoppingCart SET quantity = %s WHERE customer_id = %s", (updated_quantity, customer_id))
+          mydb.commit()
+          print("Product quantity updated in cart successfully!")
+      else:
+          # Add the product to the customer's shopping cart
+          mycursor.execute("INSERT INTO ShoppingCart (total_cost, taxes, customer_id, product_id, quantity) VALUES (%s, %s, %s, %s, %s)", (product[2], product[3], customer_id, product_id, quantity))
+          mydb.commit()
+          print("Product added to cart successfully!")
     else:
       print("Product not added to cart.")
   else:
@@ -263,12 +273,11 @@ def checkout(customer_id):
           mycursor.execute("INSERT INTO purchased (order_id, product_id, quantity) VALUES (%s, %s, %s)", (order_id, item[4], item[5]))
           mycursor.execute("UPDATE product SET quantity = quantity - %s WHERE product_id = %s", (item[5], item[4]))
       mydb.commit()
-
       # Remove items from the cart
       mycursor.execute("DELETE FROM shoppingcart WHERE customer_id = %s", (customer_id,))
       mydb.commit()
 
-      print(f"Order {order_id} placed successfully with total amount {total_cost} and payment ID {payment_id}.")
+      print(f"Order {order_id} placed successfully with total amount {total_cost+taxes} and payment ID {payment_id}.\nDelivery partner ID: {delivery_partner_id}\n Delivery address: {delivery_address}\n Delivery fee: {delivery_fee}\n------------------------")
 
 def view_cart(customer_id):
     cursor = mydb.cursor()

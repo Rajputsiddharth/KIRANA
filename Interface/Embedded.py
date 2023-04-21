@@ -1,6 +1,9 @@
 import mysql.connector
 import maskpass
 from tabulate import tabulate
+import random
+from datetime import datetime
+import decimal
 
 # Establish connection with MySQL database
 mydb = mysql.connector.connect(
@@ -211,6 +214,61 @@ def remove_cart(customer_id):
                         mydb.commit()
                         print("Item quantity updated in your cart.")
 
+def checkout(customer_id):
+   # Get the products in the customer's cart
+    mycursor.execute("SELECT * FROM shoppingcart WHERE customer_id = %s", (customer_id,))
+    cart_items = mycursor.fetchall()
+    if len(cart_items) == 0:
+        print("Your cart is empty.")
+    else:
+      # Check if the products are available in the required quantity
+      for item in cart_items:
+          mycursor.execute("SELECT quantity FROM product WHERE product_id = %s", (item[4],))
+          product_quantity = mycursor.fetchone()[0]
+          if item[5] > product_quantity:
+              print(f"{item[4]} is not available in the required quantity.")
+              return
+      
+      # Calculate the total cart amount
+      total_cost = 0
+      taxes=0
+      for item in cart_items:
+          mycursor.execute("SELECT price FROM product WHERE product_id = %s", (item[4],))
+          product_price = mycursor.fetchone()[0]
+          total_cost += product_price * item[5]
+          taxes += (decimal.Decimal(str(product_price)) * item[5]) * decimal.Decimal('0.1') 
+
+      # Get payment details
+      payment_mode = input("Select payment mode (card/UPI/COD): ")
+      mycursor.execute("INSERT INTO payment (payment_mode) VALUES (%s)", (payment_mode,))
+      mydb.commit()
+      
+      # Add entries to the order table
+      mycursor.execute("SELECT deliverypartner_id FROM deliverypartner ORDER BY RAND() LIMIT 1")
+      delivery_partner_id = mycursor.fetchone()[0]
+      delivery_fee = random.uniform(1.0, 20.0)
+      order_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+      mycursor.execute("SELECT apt_number, street, city, state, pincode FROM customer WHERE customer_id = %s", (customer_id,))
+      address_components = mycursor.fetchone()
+      delivery_address = str(address_components[0]) + ", " + str(address_components[1]) + ", " + address_components[2] + ", " + address_components[3] + " - " + str(address_components[4])
+      mycursor.execute("SELECT payment_id FROM payment ORDER BY payment_id DESC LIMIT 1")
+      payment_id = mycursor.fetchone()[0]
+      mycursor.execute("INSERT INTO orders (customer_id, delivery_addr, delivery_fee, order_date, total_cost, taxes, payment_id, deliverypartner_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)", ( customer_id, delivery_address, delivery_fee, order_date, total_cost, taxes, payment_id, delivery_partner_id,))
+      mydb.commit()
+
+      # Add entries to the purchased table
+      mycursor.execute("SELECT order_id FROM orders WHERE customer_id = %s ORDER BY order_id DESC LIMIT 1", (customer_id,))
+      order_id = mycursor.fetchone()[0]
+      for item in cart_items:
+          mycursor.execute("INSERT INTO purchased (order_id, product_id, quantity) VALUES (%s, %s, %s)", (order_id, item[4], item[5]))
+          mycursor.execute("UPDATE product SET quantity = quantity - %s WHERE product_id = %s", (item[5], item[4]))
+      mydb.commit()
+
+      # Remove items from the cart
+      mycursor.execute("DELETE FROM shoppingcart WHERE customer_id = %s", (customer_id,))
+      mydb.commit()
+
+      print(f"Order {order_id} placed successfully with total amount {total_cost} and payment ID {payment_id}.")
 
 def view_cart(customer_id):
     cursor = mydb.cursor()
@@ -510,7 +568,7 @@ while (True):
           print("Login Successful! ")
           while True:
             # print("1) View Categories\n2) View Products\n3) View Cart\n4) Add to Cart\n5) Remove from Cart\n6) Checkout\n7) Logout")
-            print("1) View Categories\n2) View Products\n3) Search Product\n4) Add to Cart \n5) View Cart\n6) Remove from Cart\n7) View Past Orders\n8) Logout")
+            print("1) View Categories\n2) View Products\n3) Search Product\n4) Add to Cart \n5) View Cart\n6) Remove from Cart\n7) View Past Orders\n8) Checkout\n9) Logout")
             i2 = int(input("Enter your choice: "))
             if i2 == 1:
               view_categories()
@@ -528,17 +586,9 @@ while (True):
             elif i2 == 7:
               view_past_orders(result)
             elif i2 == 8:
+              checkout(result)
+            elif i2 == 9:
               break
-            # elif choice == 3:
-            #   #view_cart()
-            # elif choice == 4:
-            #   #add_to_cart()
-            # elif choice == 5:
-            #   #remove_from_cart()
-            # elif choice == 6:
-            #   #checkout()
-            # elif choice == 7:
-            #   break
         else:
           print("OOOPS, Login Failed!")
       elif i1 == 2: 

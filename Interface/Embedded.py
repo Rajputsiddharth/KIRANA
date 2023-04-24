@@ -79,7 +79,13 @@ def add_product():
   description = input("Enter the description of the product: ")
   seller_id = int(input("Enter the seller ID for the product: "))
   category_id = int(input("Enter the category ID for the product: "))
+  # Check if category exists
+  mycursor.execute("SELECT * FROM Category WHERE id=%s", (category_id,))
+  category = mycursor.fetchone()
 
+  if category is None:
+      print("Please enter a valid category.")
+      return
   # Define SQL query and data values
   sql = "INSERT INTO Product (name, price, quantity, rating, description, seller_id, category_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
   val = (name, price, quantity, rating, description, seller_id, category_id)
@@ -146,7 +152,7 @@ def login_seller():
   if len(result) == 0:
     return False
   else:
-    return True
+    return result[0][0]
   
 def add_to_cart(customer_id):
   # Get input from user
@@ -539,6 +545,51 @@ def olap_query_6():
     headers = ["Number of Customers", "Birth Year", "Birth Month"]
     print(tabulate(results, headers=headers, tablefmt="grid"))
 
+def olap_query_seller1(seller_id):
+    # execute query
+    mycursor.execute(f"""
+        SELECT p.name AS "Product Name",
+              SUM(pr.quantity) AS "Quantity Sold",
+              AVG(p.rating) AS "Average Rating",
+              SUM(p.price * pr.quantity) AS "Amount of Money"
+        FROM Product p
+        JOIN Purchased pr ON p.product_id = pr.product_id
+        WHERE p.seller_id = {seller_id} 
+        GROUP BY p.product_id
+        ORDER BY "Quantity Sold" DESC;
+    """)
+
+    # print results
+    results = mycursor.fetchall()
+    headers = ["Product Name", "Quantity Sold", "Average Rating","Amount of Money"]
+    print(tabulate(results, headers=headers, tablefmt="grid"))
+
+
+def olap_query_seller2(seller_id):
+    # Define the OLAP query
+    sql = mycursor.execute(f"""
+      SELECT c.name AS "Category Name", 
+            SUM(p.quantity) AS "Quantity Sold", 
+            AVG(p.rating) AS "Average Rating", 
+            SUM(p.price * p.quantity) AS "Amount of Money"
+      FROM Product p
+      INNER JOIN Category c ON p.category_id = c.category_id
+      WHERE p.seller_id = {seller_id} 
+      GROUP BY c.name;
+    """)
+
+    # Execute the query
+    result = mycursor.fetchall()
+
+    # Check if the result is empty
+    if not result:
+        print("No data found for this seller. Please enter a valid seller ID.")
+        return
+
+    # Format and print the result using tabulate
+    headers = ["Category Name", "Quantity Sold", "Average Rating", "Amount of Money"]
+    table = [list(row) for row in result]
+    print(tabulate(table, headers=headers))
 
 def search_product(product_name):
     # Execute the SQL query to select the product by name
@@ -601,7 +652,8 @@ while (True):
         else:
           print("OOOPS, Login Failed!")
       elif i1 == 2: 
-        if login_seller():
+        result = login_seller()
+        if result:
           print("Login Successful!")
           while True:
             print("1) View Categories\n2) View Products\n3) View Analytics\n4) Add Product\n5) Logout")
@@ -611,7 +663,16 @@ while (True):
             elif i2 == 2:
               view_products()
             elif i2 == 3:
-              olap_query_4()
+              while True:
+                print("1. Total sales productwise\n2. Total sales categorywise\n3. Go Back")
+                inp = int(input("Enter your choice: "))
+                if inp == 1:
+                  olap_query_seller1(result)
+                elif inp == 2:
+                  olap_query_seller2(result)
+                elif inp == 3:
+                  break
+
             elif i2 == 4:
               add_product()
             elif i2 == 5:

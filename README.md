@@ -4,7 +4,7 @@ This is the Kirana online retail store DBMS project created by Siddharth Rajput 
 
 ## Project Scope
 
-This project aims to create a web-based platform for an online retail store, "Kirana", using concepts of DBMS. The website will have a user-friendly interface for customers to purchase daily essential products, with features such as login/account creation, order history, product browsing by category, shopping cart, checkout, and return/refund processing. On the system end, developers will have access to the backend to manage the store's inventory, including adding new products and editing existing products, setting discounts and deals, managing customer accounts, and editing product categories. The project scope includes designing and developing a relational database and using SQL for data management and manipulation.
+This project aims to create a web-based platform for an online retail store, "Kirana", using concepts of DBMS. The program has a user-friendly interface for customers to purchase daily essential products, with features such as login/account creation, order history, product browsing by category, shopping cart, checkout, and return/refund processing. On the system end, developers will have access to the backend to manage the store's inventory, including adding new products and editing existing products, setting discounts and deals, managing customer accounts, and editing product categories. The project scope includes designing and developing a relational database and using SQL for data management and manipulation.
 
 ## Functional Requirements
 

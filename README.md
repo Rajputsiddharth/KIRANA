@@ -2,6 +2,51 @@
 
 This is the database schema and queries for the Kirana online retail store DBMS project created by Siddharth Rajput and Viviana Longjam.
 
+## Project Scope
+
+This project aims to create a web-based platform for an online retail store, "Kirana", using concepts of DBMS. The website will have a user-friendly interface for customers to purchase daily essential products, with features such as login/account creation, order history, product browsing by category, shopping cart, checkout, and return/refund processing. On the system end, developers will have access to the backend to manage the store's inventory, including adding new products and editing existing products, setting discounts and deals, managing customer accounts, and editing product categories. The project scope includes designing and developing a relational database and using SQL for data management and manipulation.
+
+## Functional Requirements
+
+### User Account Management:
+
+- Allow users to create a new account with basic personal information such as name, email, address, and contact number.
+- Allow users to log in using their registered email and password.
+- Allow users to reset their password in case they forget it.
+- Allow users to update their personal information and change their password.
+- Allow users to view their order history and track the status of their current orders.
+
+### Product Browsing and Search:
+
+- Allow users to browse products by category.
+- Allow users to search for products.
+- Display product details such as name, description, images, price, and ratings.
+
+### Shopping Cart and Checkout:
+
+- Allow users to add products to their shopping cart.
+- Allow users to add products to their wishlist or mark them as favorites.
+- Allow users to view the contents of their shopping cart, change the quantity of items, and remove items.
+- Allow users to checkout by providing their shipping address and selecting a delivery option.
+- Allow users to track the status of their order and view their order history.
+- Allow users to process returns and refunds.
+
+### Inventory Management:
+
+- Allow developers to add new products and edit existing products.
+- Keep track of the current inventory and display if a product is out of stock.
+- Update the cart of users who have added out-of-stock products.
+- Keep track of available stock and balance.
+- Keep track of order details.
+- Allow developers to set discounts and deals on products.
+
+### Customer Management:
+
+- Allow developers to manage customer accounts, including viewing and processing returns and refunds.
+- Store customer details, including personal information such as name, past orders, and address.
+- Product categories can be edited, added, or deleted.
+
+
 ## Database Schema
 
 ### Customer

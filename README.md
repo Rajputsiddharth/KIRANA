@@ -1,6 +1,6 @@
 # Kirana - Online Retail Store DBMS Project
 
-This is the database schema and queries for the Kirana online retail store DBMS project created by Siddharth Rajput and Viviana Longjam.
+This is the Kirana online retail store DBMS project created by Siddharth Rajput and Viviana Longjam.
 
 ## Project Scope
 
